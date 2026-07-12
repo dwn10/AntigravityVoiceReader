@@ -47,8 +47,33 @@ La forma más sencilla de utilizar la herramienta es mediante el archivo `.bat` 
 - Para cerrarlo definitivamente, haz clic en la "X" del mini-reproductor flotante.
 
 <br>
+
+## Clonación
+
+Para clonar este repositorio y empezar a trabajar en local, ejecuta el siguiente comando en tu terminal:
+
+```bash
+git clone https://github.com/dwn10/AntigravityVoiceReader.git
+cd AntigravityVoiceReader
+```
+
+## Contribución
+
+¡Las contribuciones son siempre bienvenidas! Si deseas mejorar el proyecto, sigue estos pasos:
+1. Haz un **Fork** del proyecto.
+2. Crea tu rama de características (`git checkout -b feature/MejoraIncreible`).
+3. Realiza tus cambios y haz commit de ellos (`git commit -m 'Añadir alguna MejoraIncreible'`).
+4. Haz push a la rama (`git push origin feature/MejoraIncreible`).
+5. Abre un **Pull Request**.
+
+## Licencia
+
+Este proyecto está distribuido bajo la licencia **MIT**. Para más información, consulta el archivo [LICENSE](./LICENSE) incluido en este repositorio. La licencia permite uso comercial, modificación, distribución y uso privado.
+
+<br>
 <p align="center">
-  <a href="./Project.md"><img src="https://img.shields.io/badge/Visitar-Arquitectura-blue?style=for-the-badge"></a>
+  <a href="./Project.md"><img src="https://img.shields.io/badge/Visitar-Arquitectura-blue?style=for-the-badge" alt="Visitar Arquitectura"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/Licencia-MIT-green?style=for-the-badge" alt="Licencia MIT"></a>
 </p>
 
 ---
