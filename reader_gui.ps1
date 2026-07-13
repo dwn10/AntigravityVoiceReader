@@ -75,10 +75,13 @@ $btnStop.Add_Click({
 })
 
 $btnReplay.Add_Click({
-    $synth.SpeakAsyncCancelAll()
-    if ($global:lastText -ne "") {
-        $synth.SpeakAsync($global:lastText) | Out-Null
-    }
+    try {
+        $synth.SpeakAsyncCancelAll()
+        [System.Threading.Thread]::Sleep(50)
+        if ($global:lastText -ne "") {
+            $synth.SpeakAsync($global:lastText) | Out-Null
+        }
+    } catch {}
 })
 
 # Lógica del Timer (lee asíncronamente el archivo sin bloquear botones)
