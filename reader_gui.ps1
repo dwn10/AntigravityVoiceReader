@@ -9,12 +9,16 @@ Add-Type -AssemblyName System.Speech
 # Buscar última conversación si es auto
 if ($ConversationId -eq "auto") {
     $brainPath = "$env:USERPROFILE\.gemini\antigravity-ide\brain"
-    $latestFolder = Get-ChildItem -Path $brainPath -Directory | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-    if ($latestFolder) {
-        $ConversationId = $latestFolder.Name
+    # Buscar directamente el transcript.jsonl que fue modificado hace menos tiempo
+    $latestTranscript = Get-ChildItem -Path $brainPath -Filter "transcript.jsonl" -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if ($latestTranscript) {
+        $transcriptPath = $latestTranscript.FullName
+    } else {
+        $transcriptPath = ""
     }
+} else {
+    $transcriptPath = "$env:USERPROFILE\.gemini\antigravity-ide\brain\$ConversationId\.system_generated\logs\transcript.jsonl"
 }
-$transcriptPath = "$env:USERPROFILE\.gemini\antigravity-ide\brain\$ConversationId\.system_generated\logs\transcript.jsonl"
 
 $synth = New-Object System.Speech.Synthesis.SpeechSynthesizer
 $esVoice = $synth.GetInstalledVoices() | Where-Object { $_.VoiceInfo.Culture.Name -like "es-*" } | Select-Object -First 1
