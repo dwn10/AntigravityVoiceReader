@@ -21,8 +21,11 @@ El script lee en tiempo real el archivo de registro interno de tu chat actual. C
 
 La forma más sencilla de utilizar la herramienta es mediante el archivo `.bat` incluido:
 
+0. **Instalación Rápida (Para acceso global):**
+   Haz doble clic en el archivo **`Instalar_Acceso.bat`**. Esto creará de forma automática un acceso directo en tu Escritorio para que no tengas que navegar hasta esta carpeta cada vez que necesites usar la herramienta.
+
 1. **Uso Diario (Recomendado):**
-   Haz doble clic en el archivo **`Lector.bat`**.
+   Haz doble clic en el acceso directo de tu Escritorio o en el archivo **`Lector.bat`**.
    Esto iniciará el reproductor en modo oculto, mostrará directamente el mini-reproductor y se acoplará a tu conversación actual o a la más reciente de forma automática.
 
 2. **Modo Gráfico por Comando (Avanzado):**
@@ -47,33 +50,8 @@ La forma más sencilla de utilizar la herramienta es mediante el archivo `.bat` 
 - Para cerrarlo definitivamente, haz clic en la "X" del mini-reproductor flotante.
 
 <br>
-
-## Clonación
-
-Para clonar este repositorio y empezar a trabajar en local, ejecuta el siguiente comando en tu terminal:
-
-```bash
-git clone https://github.com/dwn10/AntigravityVoiceReader.git
-cd AntigravityVoiceReader
-```
-
-## Contribución
-
-¡Las contribuciones son siempre bienvenidas! Si deseas mejorar el proyecto, sigue estos pasos:
-1. Haz un **Fork** del proyecto.
-2. Crea tu rama de características (`git checkout -b feature/MejoraIncreible`).
-3. Realiza tus cambios y haz commit de ellos (`git commit -m 'Añadir alguna MejoraIncreible'`).
-4. Haz push a la rama (`git push origin feature/MejoraIncreible`).
-5. Abre un **Pull Request**.
-
-## Licencia
-
-Este proyecto está distribuido bajo la licencia **MIT**. Para más información, consulta el archivo [LICENSE](./LICENSE) incluido en este repositorio. La licencia permite uso comercial, modificación, distribución y uso privado.
-
-<br>
 <p align="center">
-  <a href="./Project.md"><img src="https://img.shields.io/badge/Visitar-Arquitectura-blue?style=for-the-badge" alt="Visitar Arquitectura"></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/Licencia-MIT-green?style=for-the-badge" alt="Licencia MIT"></a>
+  <a href="./Project.md"><img src="https://img.shields.io/badge/Visitar-Arquitectura-blue?style=for-the-badge"></a>
 </p>
 
 ---
