@@ -1,7 +1,6 @@
 # 🏗️ Antigravity Voice Reader - Arquitectura del Sistema (Project.md)
 
-Este documento centraliza el diseño arquitectónico, flujos de datos y estrategias técnicas de **Antigravity Voice Reader**, herramienta auxiliar para sintetizar las respuestas del asistente, estructurado bajo la visión de la habilidad `el-arquitecto`.
-
+Este documento centraliza el diseño arquitectónico, flujos de datos y estrategias técnicas de **Antigravity Voice Reader**, herramienta auxiliar para sintetizar las respuestas del asistente en el IDE-Antigravity.
 ---
 
 ## 1. Justificación del Stack Tecnológico
