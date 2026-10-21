@@ -1,13 +1,24 @@
 # Antigravity Voice Reader (Text-to-Speech)
 
+<p align="center">
+  <strong>Language:</strong>
+  <a href="README.md">Español</a> |
+  <a href="README.en.md">English</a> |
+  <a href="README.de.md">Deutsch</a>
+</p>
+
 Este es un reproductor flotante y herramienta de fondo diseñada para leer en voz alta las respuestas del agente de Antigravity IDE de forma natural, usando el motor nativo de síntesis de voz de Windows.
 
 ## Características Principales
 
-*   **Voz Nativa en Español:** Detecta automáticamente tu voz instalada con prefijo `es-*` para garantizar la mejor pronunciación posible y evitar voces extranjeras.
-*   **Limpieza Inteligente:** Elimina marcas de código, enlaces, y purga caracteres especiales y tildes utilizando un filtrado estricto ASCII/Unicode para evitar errores robóticos en la dicción.
+*   **Multilingüe Inteligente (Auto-Detección):** Analiza en tiempo real el texto de la respuesta y conmuta automáticamente entre las voces instaladas en Windows:
+    *   🇩🇪 **Alemán (de-DE):** `Microsoft Hedda Desktop` (pronuncia umlauts ä, ö, ü, ß a la perfección).
+    *   🇪🇸 **Español (es-ES):** `Microsoft Helena Desktop`.
+    *   🇺🇸 **Inglés (en-US):** `Microsoft Zira Desktop`.
+*   **Selector Manual de Idioma:** En el modo expandido dispones de un menú desplegable para bloquear el lector en un idioma específico (`Auto`, `Español`, `Deutsch`, `English`).
+*   **Limpieza Inteligente Contextual:** Elimina marcas de código y enlaces adaptando la pronunciación al idioma (ej. *"Code ausgelassen"* en alemán vs *"código omitido"* en español).
 *   **0-Block UI (Alto Rendimiento):** Utiliza un sistema avanzado de lectura basada en bytes (StreamReader) para monitorizar el chat (`transcript.jsonl`) sin consumir memoria y sin congelar los controles gráficos.
-*   **Mini-Reproductor Gráfico:** Una pequeña interfaz flotante (`TopMost`) que siempre permanece encima de tu editor para ofrecerte botones de control.
+*   **Mini-Reproductor Gráfico Híbrido:** Interfaz flotante (`TopMost`) con modo compacto y modo expandido con transcripción en vivo.
 
 ## Requisitos
 - Windows 10 o Windows 11.
@@ -15,23 +26,25 @@ Este es un reproductor flotante y herramienta de fondo diseñada para leer en vo
 - Antigravity IDE instalado.
 
 ## ¿Cómo funciona?
-El script lee en tiempo real el archivo de registro interno de tu chat actual. Cuando detecta que el agente ("MODEL") acaba de enviar una respuesta, extrae el texto, filtra los metadatos y emojis, y lo envía al sintetizador de voz en un proceso paralelo (`SpeakAsync`).
+El script lee en tiempo real el archivo de registro interno de tu chat actual. Cuando detecta que el agente ("MODEL") acaba de enviar una respuesta, determina el idioma, normaliza el texto y lo envía al sintetizador de voz en un proceso paralelo (`SpeakAsync`).
 
 ## Instrucciones de Instalación y Uso
 
-La forma más sencilla de utilizar la herramienta es mediante el archivo `.bat` incluido:
+La forma más sencilla de utilizar la herramienta es mediante los archivos `.bat` incluidos:
 
 0. **Instalación Rápida (Para acceso global):**
-   Haz doble clic en el archivo **`Instalar_Acceso.bat`**. Esto creará de forma automática un acceso directo en tu Escritorio para que no tengas que navegar hasta esta carpeta cada vez que necesites usar la herramienta.
+   Haz doble clic en el archivo **`Instalar_Acceso.bat`**. Esto creará de forma automática un acceso directo en tu Escritorio.
 
-1. **Uso Diario (Recomendado):**
-   Haz doble clic en el acceso directo de tu Escritorio o en el archivo **`Lector.bat`**.
-   Esto iniciará el reproductor en modo oculto, mostrará directamente el mini-reproductor y se acoplará a tu conversación actual o a la más reciente de forma automática.
+1. **Uso Diario (Recomendado - Auto-Detección):**
+   Haz doble clic en **`Lector.bat`**. Se acoplará automáticamente a tu conversación y detectará el idioma en cada mensaje.
 
-2. **Modo Gráfico por Comando (Avanzado):**
-   Puedes invocar manualmente el script con un ID específico:
+2. **Lanzar Directamente en Alemán:**
+   Haz doble clic en **`Lector_DE.bat`** (en la raíz o en la carpeta `VoiceReader_de/`). Iniciará el lector directamente configurado en alemán con saludo *"Sprachausgabe bereit"*.
+
+3. **Modo Gráfico por Comando (Avanzado):**
+   Puedes invocar manualmente el script con idioma específico o automático:
    ```powershell
-   powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File .\reader_gui.ps1 -ConversationId auto
+   powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File .\reader_gui.ps1 -ConversationId auto -Language auto
    ```
 
 3. **Modo Consola Original (Obsoleto):**

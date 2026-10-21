@@ -36,7 +36,8 @@ Aunque no tenemos una base de datos tradicional, el flujo de datos depende fuert
 ```mermaid
 erDiagram
     TRANSCRIPT_FILE ||--o{ JSONL_MESSAGE : contains
-    JSONL_MESSAGE ||--|| TEXT_NORMALIZER : parsed_by
+    JSONL_MESSAGE ||--|| LANGUAGE_DETECTOR : analyzed_by
+    LANGUAGE_DETECTOR ||--|| TEXT_NORMALIZER : configures
     TEXT_NORMALIZER ||--|| SPEECH_SYNTHESIZER : sent_to
     GUI_CONTROLS ||--|| SPEECH_SYNTHESIZER : controls
 
@@ -51,13 +52,18 @@ erDiagram
         string content "Texto crudo con Markdown"
     }
 
+    LANGUAGE_DETECTOR {
+        string detected_lang "de / es / en"
+        string mode "Auto / Manual Override"
+    }
+
     TEXT_NORMALIZER {
         string raw_text
-        string filtered_text "Limpio de Emojis, Tildes, y URLs"
+        string filtered_text "Contextual por idioma (omite código y enlaces)"
     }
 
     SPEECH_SYNTHESIZER {
-        string Voice "es-ES / es-MX"
+        string Voice "de-DE (Hedda) / es-ES (Helena) / en-US (Zira)"
         int Rate
         bool IsSpeaking
     }
@@ -114,10 +120,14 @@ sequenceDiagram
 
 *   **Foco en Accesibilidad**: El reproductor no intenta reemplazar el editor de código, sino ser una herramienta periférica ligera y adaptable.
 *   **Modo TopMost (Flotante)**: Configurado para permanecer siempre por encima del IDE, garantizando que los controles de audio estén a un clic de distancia sin necesidad de cambiar el foco de la ventana de código.
-*   **Controles en Inglés y Estado Dinámico**: Controles universales (`Pause` / `Resume`, `Stop`, `Repeat`) con retroalimentación visual del estado de reproducción.
+*   **Controles en Inglés y Estado Dinámico**: Controles universales (`Pause` / `Resume`, `Stop`, `Repeat`) con retroalimentación visual del estado de reproducción e indicador de idioma detectado (`[DE]`, `[ES]`, `[EN]`).
+*   **Soporte Multilingüe (Auto-Detección y Switch)**:
+    *   *Auto-Detección Inteligente*: Detección de idioma por análisis léxico y stopwords en tiempo real.
+    *   *Voces Nativas*: `Microsoft Hedda Desktop` para Alemán (`de-DE`), `Microsoft Helena Desktop` para Español (`es-ES`) y `Microsoft Zira Desktop` para Inglés (`en-US`).
+    *   *Selector Manual*: Dropdown en modo expandido para forzar o alternar libremente de idioma.
 *   **Modo Híbrido (Compacto / Maximizado)**:
     *   *Modo Compacto*: Barra flotante mínima y ergonómica.
-    *   *Modo Maximizado / Expandido*: Al maximizar la ventana o redimensionarla, se despliega un área de texto con scroll vertical que renderiza la transcripción en vivo del mensaje que está siendo leído, junto a un botón directo para retornar al modo compacto.
+    *   *Modo Maximizado / Expandido*: Al maximizar la ventana o redimensionarla, se despliega un área de texto con scroll vertical que renderiza la transcripción en vivo del mensaje que está siendo leído, junto al selector de idiomas y un botón directo para retornar al modo compacto.
 *   **Control Total de Ventana**: Soporte nativo para Minimizar a la barra de tareas, Maximizar a pantalla completa / modo expandido, y Restaurar a modo compacto.
 
 ---
@@ -126,10 +136,12 @@ sequenceDiagram
 
 1.  **Riesgo**: Bloqueo del Hilo Principal de UI (UI Freeze).
     *   *Mitigación*: En lugar de usar `Get-Content` o leer el archivo repetidamente, se implementó un `StreamReader` de bajo nivel que almacena la posición del cursor (`Stream.Position`). Esto lee operaciones de bytes en lugar de cargar en RAM archivos grandes de log (O(1) lectura en vez de O(N)).
-2.  **Riesgo**: Pronunciación Robótica e Incomprensible de Vocales Acentuadas por Motor TTS incompatible.
-    *   *Mitigación*: Implementación de un motor de reemplazo agnóstico de codificación (basado en bytes hexadecimales ASCII) que convierte tildes y eñes a caracteres crudos anglosajones y fuerza dinámicamente la búsqueda de una cultura regional con prefijo `es-*` en el host.
-3.  **Riesgo**: Lectura interminable de bloques de código.
-    *   *Mitigación*: Algoritmo de expresiones regulares (Regex) diseñado para omitir silenciosamente el interior de todo elemento envuelto en ``` antes de pasarlo al motor TTS.
+2.  **Riesgo**: Pronunciación Robótica e Incomprensible de Vocales Acentuadas o Diéresis (Umlauts).
+    *   *Mitigación*: Separación contextual por idioma. En español normaliza tildes y eñes mediante códigos numéricos directos de caracteres para evitar problemas de encoding; en alemán preserva nativamente los umlauts (`ä, ö, ü, ß`) requeridos por el motor `de-DE` de Windows.
+3.  **Riesgo**: Mezcla de idiomas en respuestas bilingües.
+    *   *Mitigación*: Algoritmo heurístico de detección con ponderación de caracteres unívocos y stopwords para conmutar la voz de Windows (`SelectVoice`) en tiempo real antes de llamar a `SpeakAsync`.
+4.  **Riesgo**: Lectura interminable de bloques de código y URLs.
+    *   *Mitigación*: Algoritmo de expresiones regulares (Regex) diseñado para omitir silenciosamente el interior de todo elemento envuelto en ``` antes de pasarlo al motor TTS, adaptando la frase de aviso (*"Code ausgelassen"* en alemán vs *"código omitido"* en español).
 
 <br>
 
