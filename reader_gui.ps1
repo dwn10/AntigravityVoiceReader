@@ -28,32 +28,84 @@ if ($esVoice) { try { $synth.SelectVoice($esVoice.VoiceInfo.Name) } catch {} }
 
 # Configuración de la Interfaz (Form)
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "Voz"
-$form.Size = New-Object System.Drawing.Size(190, 80)
+$form.Text = "Voice Reader"
+$compactSize = New-Object System.Drawing.Size(280, 85)
+$form.Size = $compactSize
+$form.MinimumSize = New-Object System.Drawing.Size(260, 85)
 $form.TopMost = $true
-$form.FormBorderStyle = 'FixedToolWindow'
+$form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Sizable
+$form.MaximizeBox = $true
+$form.MinimizeBox = $true
+$form.ShowInTaskbar = $true
 $form.StartPosition = 'CenterScreen'
-# Hemos removido la asignación manual de Location para evitar el error.
 
-# Botones
+# Panel superior para controles
+$topPanel = New-Object System.Windows.Forms.Panel
+$topPanel.Dock = [System.Windows.Forms.DockStyle]::Top
+$topPanel.Height = 44
+$form.Controls.Add($topPanel)
+
+# Botones en inglés
 $btnPlayPause = New-Object System.Windows.Forms.Button
-$btnPlayPause.Location = New-Object System.Drawing.Point(5, 5)
-$btnPlayPause.Size = New-Object System.Drawing.Size(50, 30)
-$btnPlayPause.Text = "Pausa"
+$btnPlayPause.Location = New-Object System.Drawing.Point(8, 7)
+$btnPlayPause.Size = New-Object System.Drawing.Size(65, 30)
+$btnPlayPause.Text = "Pause"
 
 $btnStop = New-Object System.Windows.Forms.Button
-$btnStop.Location = New-Object System.Drawing.Point(60, 5)
-$btnStop.Size = New-Object System.Drawing.Size(50, 30)
+$btnStop.Location = New-Object System.Drawing.Point(78, 7)
+$btnStop.Size = New-Object System.Drawing.Size(60, 30)
 $btnStop.Text = "Stop"
 
 $btnReplay = New-Object System.Windows.Forms.Button
-$btnReplay.Location = New-Object System.Drawing.Point(115, 5)
-$btnReplay.Size = New-Object System.Drawing.Size(50, 30)
-$btnReplay.Text = "Repetir"
+$btnReplay.Location = New-Object System.Drawing.Point(143, 7)
+$btnReplay.Size = New-Object System.Drawing.Size(65, 30)
+$btnReplay.Text = "Repeat"
 
-$form.Controls.Add($btnPlayPause)
-$form.Controls.Add($btnStop)
-$form.Controls.Add($btnReplay)
+$btnCompact = New-Object System.Windows.Forms.Button
+$btnCompact.Location = New-Object System.Drawing.Point(214, 7)
+$btnCompact.Size = New-Object System.Drawing.Size(95, 30)
+$btnCompact.Text = "Compact"
+$btnCompact.Visible = $false
+
+$lblStatus = New-Object System.Windows.Forms.Label
+$lblStatus.Location = New-Object System.Drawing.Point(318, 14)
+$lblStatus.AutoSize = $true
+$lblStatus.Text = "Status: Ready"
+$lblStatus.Font = New-Object System.Drawing.Font("Segoe UI", 9)
+$lblStatus.Visible = $false
+
+$topPanel.Controls.AddRange(@($btnPlayPause, $btnStop, $btnReplay, $btnCompact, $lblStatus))
+
+# Área de texto expandida (visible al maximizar o ampliar)
+$txtSpeech = New-Object System.Windows.Forms.TextBox
+$txtSpeech.Multiline = $true
+$txtSpeech.ReadOnly = $true
+$txtSpeech.ScrollBars = [System.Windows.Forms.ScrollBars]::Vertical
+$txtSpeech.Dock = [System.Windows.Forms.DockStyle]::Fill
+$txtSpeech.Font = New-Object System.Drawing.Font("Segoe UI", 10)
+$txtSpeech.Visible = $false
+$form.Controls.Add($txtSpeech)
+$txtSpeech.BringToFront()
+
+# Evento para volver al modo compacto
+$btnCompact.Add_Click({
+    $form.WindowState = [System.Windows.Forms.FormWindowState]::Normal
+    $form.Size = $compactSize
+})
+
+# Manejo dinámico al maximizar o restaurar a modo compacto
+$form.Add_Resize({
+    if ($form.WindowState -eq [System.Windows.Forms.FormWindowState]::Maximized -or $form.Height -gt 130) {
+        $btnCompact.Visible = $true
+        $lblStatus.Visible = $true
+        $txtSpeech.Visible = $true
+    }
+    else {
+        $btnCompact.Visible = $false
+        $lblStatus.Visible = $false
+        $txtSpeech.Visible = $false
+    }
+})
 
 $global:lastText = ""
 $global:lastFilePos = 0
@@ -67,14 +119,20 @@ if (Test-Path $transcriptPath) {
 $btnPlayPause.Add_Click({
         if ($synth.State -eq 'Paused') {
             $synth.Resume()
+            $btnPlayPause.Text = "Pause"
+            $lblStatus.Text = "Status: Reading..."
         }
         elseif ($synth.State -eq 'Speaking') {
             $synth.Pause()
+            $btnPlayPause.Text = "Resume"
+            $lblStatus.Text = "Status: Paused"
         }
     })
 
 $btnStop.Add_Click({
         $synth.SpeakAsyncCancelAll()
+        $btnPlayPause.Text = "Pause"
+        $lblStatus.Text = "Status: Stopped"
     })
 
 $btnReplay.Add_Click({
@@ -83,6 +141,8 @@ $btnReplay.Add_Click({
             [System.Threading.Thread]::Sleep(50)
             if ($global:lastText -ne "") {
                 $synth.SpeakAsync($global:lastText) | Out-Null
+                $btnPlayPause.Text = "Pause"
+                $lblStatus.Text = "Status: Reading..."
             }
         }
         catch {}
@@ -125,6 +185,9 @@ $timer.Add_Tick({
                                 $text = $text.Replace("$([char]193)", "A").Replace("$([char]201)", "E").Replace("$([char]205)", "I").Replace("$([char]211)", "O").Replace("$([char]218)", "U")
                             
                                 $global:lastText = $text
+                                $txtSpeech.Text = $text
+                                $lblStatus.Text = "Status: Reading..."
+                                $btnPlayPause.Text = "Pause"
                                 $synth.SpeakAsync($text) | Out-Null
                             }
                         }

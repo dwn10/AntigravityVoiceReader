@@ -40,14 +40,18 @@ La forma más sencilla de utilizar la herramienta es mediante el archivo `.bat` 
    .\reader.ps1 -ConversationId auto
    ```
 
-## Controles del Mini-Reproductor
-- ⏯️ **(Play / Pausa):** Pausa la síntesis actual y la reanuda desde el mismo punto exacto.
-- ⏹️ **(Stop):** Detiene completamente la lectura del mensaje actual.
-- 🔄 **(Repetir):** Vuelve a leer el último mensaje desde el inicio.
+## Controles del Reproductor (Mini y Expandido)
+- ⏯️ **Pause / Resume:** Pausa la síntesis actual y la reanuda desde el mismo punto exacto.
+- ⏹️ **Stop:** Detiene completamente la lectura del mensaje actual.
+- 🔄 **Repeat:** Vuelve a leer el último mensaje desde el inicio.
+- 🗖 **Maximizar / Modo Expandido:** Permite ampliar la ventana para ver en tiempo real el texto transcrito de la respuesta que se está leyendo y el estado actual.
+- 🗗 **Volver a Modo Compacto:** Mediante el botón de restaurar de la ventana o el botón `Compact` en la barra superior, la ventana regresa al tamaño flotante compacto.
+- 🗕 **Minimizar:** Minimiza la ventana a la barra de tareas de Windows para no interrumpir tu espacio de trabajo.
+- ❌ **Cerrar:** Cierra y finaliza la aplicación.
 
 ### Notas adicionales
 - El reproductor omite por completo los bloques de código encerrados entre triples comillas y URLs largas para que no pases minutos escuchando a la IA deletrear símbolos de programación.
-- Para cerrarlo definitivamente, haz clic en la "X" del mini-reproductor flotante.
+- Puedes alternar entre el modo mini flotante compacto y el modo expandido en cualquier momento sin interrumpir la reproducción.
 
 <br>
 <p align="center">

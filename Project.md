@@ -112,9 +112,13 @@ sequenceDiagram
 
 ## 6. Diseño UI / UX y Adaptabilidad
 
-*   **Foco en Accesibilidad**: El mini-reproductor no intenta reemplazar el editor de código, sino ser una herramienta periférica.
-*   **Modo TopMost (Flotante)**: Configurado para permanecer siempre por encima del IDE (Visual Studio Code o Cursor), garantizando que los controles de audio estén a un clic de distancia sin necesidad de cambiar el foco de la ventana de código.
-*   **Minimalismo Visual**: Controles limitados a las 3 acciones vitales (Play/Pause, Stop, Replay) usando iconografía universal.
+*   **Foco en Accesibilidad**: El reproductor no intenta reemplazar el editor de código, sino ser una herramienta periférica ligera y adaptable.
+*   **Modo TopMost (Flotante)**: Configurado para permanecer siempre por encima del IDE, garantizando que los controles de audio estén a un clic de distancia sin necesidad de cambiar el foco de la ventana de código.
+*   **Controles en Inglés y Estado Dinámico**: Controles universales (`Pause` / `Resume`, `Stop`, `Repeat`) con retroalimentación visual del estado de reproducción.
+*   **Modo Híbrido (Compacto / Maximizado)**:
+    *   *Modo Compacto*: Barra flotante mínima y ergonómica.
+    *   *Modo Maximizado / Expandido*: Al maximizar la ventana o redimensionarla, se despliega un área de texto con scroll vertical que renderiza la transcripción en vivo del mensaje que está siendo leído, junto a un botón directo para retornar al modo compacto.
+*   **Control Total de Ventana**: Soporte nativo para Minimizar a la barra de tareas, Maximizar a pantalla completa / modo expandido, y Restaurar a modo compacto.
 
 ---
 
