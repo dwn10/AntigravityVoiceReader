@@ -50,7 +50,8 @@ The easiest way to run the tool is via the included batch files:
 ## Player Controls (Compact & Expanded)
 - ⏯️ **Pause / Resume:** Pauses playback and resumes from the exact position.
 - ⏹️ **Stop:** Immediately stops speech playback.
-- 🔄 **Repeat:** Replays the last message from the beginning.
+- 🔄 **Repeat:** Replays the current message from the beginning.
+- 🔃 **Reload:** Re-syncs with the latest active chat in the IDE and immediately reads the latest response.
 - 🗖 **Maximize / Expanded Mode:** Expands the window to display the live text transcription, status indicator, and language selector.
 - 🗗 **Compact Mode:** Restores the player back to the floating mini toolbar via the window restore button or the `Compact` button.
 - 🗕 **Minimize:** Minimizes the window to the Windows taskbar.

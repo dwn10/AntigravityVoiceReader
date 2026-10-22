@@ -49,7 +49,8 @@ Der einfachste Weg zur Ausführung sind die beiliegenden `.bat`-Dateien:
 ## Player-Steuerung (Kompakt & Erweitert)
 - ⏯️ **Pause / Resume:** Pausiert die Wiedergabe und setzt sie an gleicher Stelle fort.
 - ⏹️ **Stop:** Stoppt die aktuelle Sprachausgabe sofort.
-- 🔄 **Repeat:** Liest die letzte Nachricht erneut von vorne vor.
+- 🔄 **Repeat:** Liest die aktuelle Nachricht erneut von vorne vor.
+- 🔃 **Reload:** Synchronisiert erneut mit dem neuesten aktiven Chat im IDE und liest sofort die letzte Antwort vor.
 - 🗖 **Maximieren / Erweiterter Modus:** Vergrößert das Fenster, um die Live-Transkription, den Status und das Sprachmenü anzuzeigen.
 - 🗗 **Kompaktmodus:** Stellt die Mini-Leiste über die Wiederherstellen-Schaltfläche oder den Button `Compact` wieder her.
 - 🗕 **Minimieren:** Minimiert das Fenster in die Windows-Taskleiste.

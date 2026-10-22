@@ -72,21 +72,28 @@ erDiagram
 
 ## 4. Flujos de Usuario e Integración (Secuencia)
 
-Diagrama del flujo crítico asíncrono para el **Monitoreo Cero-Bloqueos (0-Block UI)**:
+Diagrama del flujo crítico asíncrono para el **Monitoreo Cero-Bloqueos (0-Block UI)** y sincronización dinámica:
 
 ```mermaid
 sequenceDiagram
     actor U as Usuario
     participant B as Lector.bat
     participant GUI as Interfaz (Forms)
-    participant FS as FileStream
+    participant FS as FileStream / Logs
     participant TTS as System.Speech
 
     U->>B: Doble clic
     B->>GUI: Inicia PowerShell (Hidden)
+    GUI->>FS: Precarga último mensaje del chat activo
     GUI->>GUI: Renderiza botones y activa Timer (1s)
     
     loop Cada 1000ms
+        alt Si ConversationId es 'auto' (cada 2s)
+            GUI->>FS: Comprueba si existe un nuevo chat en el IDE
+            alt Hay nuevo chat
+                GUI->>GUI: Reconecta al nuevo transcript.jsonl
+            end
+        end
         GUI->>FS: Revisa longitud del archivo (Length)
         alt Hay nuevos bytes
             FS-->>GUI: Lee solo la diferencia (desde lastFilePos)
@@ -95,9 +102,11 @@ sequenceDiagram
         end
     end
     
-    alt Usuario presiona Pausa
-        U->>GUI: Clic en ⏯️
-        GUI->>TTS: Pause()
+    alt Usuario presiona Reload (Actualizar)
+        U->>GUI: Clic en 'Reload'
+        GUI->>FS: Re-escanea chat activo y busca última respuesta
+        GUI->>GUI: Actualiza texto en pantalla
+        GUI->>TTS: SpeakAsync(última_respuesta)
     end
 ```
 
@@ -119,13 +128,14 @@ sequenceDiagram
 
 *   **Foco en Accesibilidad**: El reproductor no intenta reemplazar el editor de código, sino ser una herramienta periférica ligera y adaptable.
 *   **Modo TopMost (Flotante)**: Configurado para permanecer siempre por encima del IDE, garantizando que los controles de audio estén a un clic de distancia sin necesidad de cambiar el foco de la ventana de código.
-*   **Controles en Inglés y Estado Dinámico**: Controles universales (`Pause` / `Resume`, `Stop`, `Repeat`) con retroalimentación visual del estado de reproducción e indicador de idioma detectado (`[DE]`, `[ES]`, `[EN]`).
+*   **Controles en Inglés y Estado Dinámico**: Controles universales (`Pause` / `Resume`, `Stop`, `Repeat`, `Reload`) con retroalimentación visual del estado de reproducción e indicador de idioma detectado (`[DE]`, `[ES]`, `[EN]`).
+*   **Sincronización en Caliente (Botón Reload)**: Permite forzar en cualquier instante la re-detección del chat activo más reciente en el IDE y la síntesis inmediata de la última respuesta emitida por el modelo, solucionando desincronizaciones entre conversaciones.
 *   **Soporte Multilingüe (Auto-Detección y Switch)**:
     *   *Auto-Detección Inteligente*: Detección de idioma por análisis léxico y stopwords en tiempo real.
     *   *Voces Nativas*: `Microsoft Hedda Desktop` para Alemán (`de-DE`), `Microsoft Helena Desktop` para Español (`es-ES`) y `Microsoft Zira Desktop` para Inglés (`en-US`).
     *   *Selector Manual*: Dropdown en modo expandido para forzar o alternar libremente de idioma.
 *   **Modo Híbrido (Compacto / Maximizado)**:
-    *   *Modo Compacto*: Barra flotante mínima y ergonómica.
+    *   *Modo Compacto*: Barra flotante mínima y ergonómica (296x85 px) con botones `Pause`, `Stop`, `Repeat` y `Reload`.
     *   *Modo Maximizado / Expandido*: Al maximizar la ventana o redimensionarla, se despliega un área de texto con scroll vertical que renderiza la transcripción en vivo del mensaje que está siendo leído, junto al selector de idiomas y un botón directo para retornar al modo compacto.
 *   **Control Total de Ventana**: Soporte nativo para Minimizar a la barra de tareas, Maximizar a pantalla completa / modo expandido, y Restaurar a modo compacto.
 
@@ -141,6 +151,8 @@ sequenceDiagram
     *   *Mitigación*: Algoritmo heurístico de detección con ponderación de caracteres unívocos y stopwords para conmutar la voz de Windows (`SelectVoice`) en tiempo real antes de llamar a `SpeakAsync`.
 4.  **Riesgo**: Lectura interminable de bloques de código y URLs.
     *   *Mitigación*: Algoritmo de expresiones regulares (Regex) diseñado para omitir silenciosamente el interior de todo elemento envuelto en ``` antes de pasarlo al motor TTS, adaptando la frase de aviso (*"Code ausgelassen"* en alemán vs *"código omitido"* en español).
+5.  **Riesgo**: Desincronización y repetición de chats pasados al alternar conversaciones en el IDE.
+    *   *Mitigación*: Detección rápida (<50ms) en el timer de directorios recientes en el brain para conmutar dinámicamente al nuevo archivo `transcript.jsonl`, junto a un botón interactivo `Reload` que recarga y vocaliza instantáneamente la última respuesta válida.
 
 <br>
 

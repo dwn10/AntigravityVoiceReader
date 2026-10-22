@@ -56,7 +56,8 @@ La forma más sencilla de utilizar la herramienta es mediante los archivos `.bat
 ## Controles del Reproductor (Mini y Expandido)
 - ⏯️ **Pause / Resume:** Pausa la síntesis actual y la reanuda desde el mismo punto exacto.
 - ⏹️ **Stop:** Detiene completamente la lectura del mensaje actual.
-- 🔄 **Repeat:** Vuelve a leer el último mensaje desde el inicio.
+- 🔄 **Repeat:** Vuelve a leer el mensaje actual desde el inicio.
+- 🔃 **Reload:** Re-sincroniza con el chat activo más reciente del IDE y lee de inmediato la última respuesta.
 - 🗖 **Maximizar / Modo Expandido:** Permite ampliar la ventana para ver en tiempo real el texto transcrito de la respuesta que se está leyendo y el estado actual.
 - 🗗 **Volver a Modo Compacto:** Mediante el botón de restaurar de la ventana o el botón `Compact` en la barra superior, la ventana regresa al tamaño flotante compacto.
 - 🗕 **Minimizar:** Minimiza la ventana a la barra de tareas de Windows para no interrumpir tu espacio de trabajo.

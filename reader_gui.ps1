@@ -7,20 +7,33 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName System.Speech
 
-# Buscar última conversación si es auto
-if ($ConversationId -eq "auto") {
+# Función de búsqueda rápida de la conversación más reciente (evita escaneo recursivo lento)
+function Get-LatestTranscriptPath {
     $brainPath = "$env:USERPROFILE\.gemini\antigravity-ide\brain"
-    # Buscar directamente el transcript.jsonl que fue modificado hace menos tiempo
-    $latestTranscript = Get-ChildItem -Path $brainPath -Filter "transcript.jsonl" -Recurse -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-    if ($latestTranscript) {
-        $transcriptPath = $latestTranscript.FullName
+    if (-not (Test-Path $brainPath)) { return "" }
+    
+    $candidate = Get-ChildItem -Path $brainPath -Directory -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -ne "tempmediaStorage" } |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 10 |
+        ForEach-Object { Join-Path $_.FullName ".system_generated\logs\transcript.jsonl" } |
+        Where-Object { Test-Path $_ } |
+        Get-Item |
+        Sort-Object LastWriteTime -Descending |
+        Select-Object -First 1
+
+    if ($candidate) {
+        return $candidate.FullName
     }
-    else {
-        $transcriptPath = ""
-    }
+    return ""
+}
+
+# Resolver ruta inicial de la transcripción
+if ($ConversationId -eq "auto") {
+    $global:transcriptPath = Get-LatestTranscriptPath
 }
 else {
-    $transcriptPath = "$env:USERPROFILE\.gemini\antigravity-ide\brain\$ConversationId\.system_generated\logs\transcript.jsonl"
+    $global:transcriptPath = "$env:USERPROFILE\.gemini\antigravity-ide\brain\$ConversationId\.system_generated\logs\transcript.jsonl"
 }
 
 # Inicializar sintetizador y mapear voces instaladas (Español, Alemán, Inglés)
@@ -108,9 +121,9 @@ function Normalize-Text([string]$content, [string]$lang) {
 # Configuración de la Interfaz (Form)
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "Voice Reader"
-$compactSize = New-Object System.Drawing.Size(280, 85)
+$compactSize = New-Object System.Drawing.Size(296, 85)
 $form.Size = $compactSize
-$form.MinimumSize = New-Object System.Drawing.Size(260, 85)
+$form.MinimumSize = New-Object System.Drawing.Size(275, 85)
 $form.TopMost = $true
 $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Sizable
 $form.MaximizeBox = $true
@@ -127,29 +140,34 @@ $form.Controls.Add($topPanel)
 # Botones en inglés
 $btnPlayPause = New-Object System.Windows.Forms.Button
 $btnPlayPause.Location = New-Object System.Drawing.Point(8, 7)
-$btnPlayPause.Size = New-Object System.Drawing.Size(65, 30)
+$btnPlayPause.Size = New-Object System.Drawing.Size(60, 30)
 $btnPlayPause.Text = "Pause"
 
 $btnStop = New-Object System.Windows.Forms.Button
-$btnStop.Location = New-Object System.Drawing.Point(78, 7)
-$btnStop.Size = New-Object System.Drawing.Size(60, 30)
+$btnStop.Location = New-Object System.Drawing.Point(72, 7)
+$btnStop.Size = New-Object System.Drawing.Size(52, 30)
 $btnStop.Text = "Stop"
 
 $btnReplay = New-Object System.Windows.Forms.Button
-$btnReplay.Location = New-Object System.Drawing.Point(143, 7)
-$btnReplay.Size = New-Object System.Drawing.Size(65, 30)
+$btnReplay.Location = New-Object System.Drawing.Point(128, 7)
+$btnReplay.Size = New-Object System.Drawing.Size(62, 30)
 $btnReplay.Text = "Repeat"
 
+$btnReload = New-Object System.Windows.Forms.Button
+$btnReload.Location = New-Object System.Drawing.Point(194, 7)
+$btnReload.Size = New-Object System.Drawing.Size(62, 30)
+$btnReload.Text = "Reload"
+
 $btnCompact = New-Object System.Windows.Forms.Button
-$btnCompact.Location = New-Object System.Drawing.Point(214, 7)
-$btnCompact.Size = New-Object System.Drawing.Size(75, 30)
+$btnCompact.Location = New-Object System.Drawing.Point(262, 7)
+$btnCompact.Size = New-Object System.Drawing.Size(72, 30)
 $btnCompact.Text = "Compact"
 $btnCompact.Visible = $false
 
 # Selector de Idioma (visible en modo expandido)
 $cmbLang = New-Object System.Windows.Forms.ComboBox
 $cmbLang.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList
-$cmbLang.Location = New-Object System.Drawing.Point(295, 10)
+$cmbLang.Location = New-Object System.Drawing.Point(342, 10)
 $cmbLang.Size = New-Object System.Drawing.Size(125, 25)
 $cmbLang.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 $cmbLang.Items.AddRange(@('Auto (Detect)', 'Español (ES)', 'Deutsch (DE)', 'English (EN)'))
@@ -164,13 +182,21 @@ switch ($Language.ToLower()) {
 }
 
 $lblStatus = New-Object System.Windows.Forms.Label
-$lblStatus.Location = New-Object System.Drawing.Point(430, 14)
+$lblStatus.Location = New-Object System.Drawing.Point(475, 14)
 $lblStatus.AutoSize = $true
 $lblStatus.Text = "Status: Ready"
 $lblStatus.Font = New-Object System.Drawing.Font("Segoe UI", 9)
 $lblStatus.Visible = $false
 
-$topPanel.Controls.AddRange(@($btnPlayPause, $btnStop, $btnReplay, $btnCompact, $cmbLang, $lblStatus))
+$topPanel.Controls.AddRange(@($btnPlayPause, $btnStop, $btnReplay, $btnReload, $btnCompact, $cmbLang, $lblStatus))
+
+# Tooltips informativos para cada control
+$toolTip = New-Object System.Windows.Forms.ToolTip
+$toolTip.SetToolTip($btnPlayPause, "Pause or resume reading")
+$toolTip.SetToolTip($btnStop, "Stop reading")
+$toolTip.SetToolTip($btnReplay, "Repeat current speech")
+$toolTip.SetToolTip($btnReload, "Reload: Fetch and read latest response from active chat")
+$toolTip.SetToolTip($btnCompact, "Return to compact view")
 
 # Área de texto expandida (visible al maximizar o ampliar)
 $txtSpeech = New-Object System.Windows.Forms.TextBox
@@ -216,106 +242,221 @@ $cmbLang.Add_SelectedIndexChanged({
 
 $global:lastText = ""
 $global:lastFilePos = 0
+$global:autoCheckCounter = 0
 
-if (Test-Path $transcriptPath) {
-    $fileInfo = New-Object System.IO.FileInfo($transcriptPath)
+# Función para sincronizar y leer la última respuesta del chat activo
+function Update-LatestSpeech([bool]$speakImmediately = $true) {
+    if ($ConversationId -eq "auto") {
+        $latest = Get-LatestTranscriptPath
+        if ($latest) {
+            $global:transcriptPath = $latest
+        }
+    }
+
+    if (-not $global:transcriptPath -or -not (Test-Path $global:transcriptPath)) {
+        $lblStatus.Text = "Status: No chat found"
+        return
+    }
+
+    try {
+        $fileInfo = New-Object System.IO.FileInfo($global:transcriptPath)
+        $global:lastFilePos = $fileInfo.Length
+
+        # Lectura con FileShare.ReadWrite para evitar bloqueos con el IDE
+        $fileStream = [System.IO.File]::Open($global:transcriptPath, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+        $streamReader = New-Object System.IO.StreamReader($fileStream, [System.Text.Encoding]::UTF8)
+        $lines = New-Object System.Collections.Generic.List[string]
+        while (($line = $streamReader.ReadLine()) -ne $null) {
+            $lines.Add($line)
+        }
+        $streamReader.Close()
+        $fileStream.Close()
+
+        $lastFoundContent = $null
+
+        for ($i = $lines.Count - 1; $i -ge 0; $i--) {
+            $l = $lines[$i]
+            if ($l -match '"source":"MODEL"' -and $l -match '"type":"PLANNER_RESPONSE"') {
+                try {
+                    $json = $l | ConvertFrom-Json
+                    if ($json.content -and (-not [string]::IsNullOrWhiteSpace($json.content))) {
+                        $lastFoundContent = $json.content
+                        break
+                    }
+                }
+                catch {}
+            }
+        }
+
+        if ($lastFoundContent) {
+            $targetLang = "es"
+            switch ($cmbLang.SelectedIndex) {
+                1 { $targetLang = "es" }
+                2 { $targetLang = "de" }
+                3 { $targetLang = "en" }
+                default { $targetLang = Detect-Language $lastFoundContent }
+            }
+
+            if ($voiceMap[$targetLang]) {
+                try { $synth.SelectVoice($voiceMap[$targetLang]) } catch {}
+            }
+
+            $flag = switch ($targetLang) {
+                "de" { "[DE]" }
+                "en" { "[EN]" }
+                default { "[ES]" }
+            }
+
+            $text = Normalize-Text $lastFoundContent $targetLang
+
+            $global:lastText = $text
+            $txtSpeech.Text = $text
+            $lblStatus.Text = "Status: Reading $flag"
+            $btnPlayPause.Text = "Pause"
+
+            if ($speakImmediately) {
+                $synth.SpeakAsyncCancelAll()
+                [System.Threading.Thread]::Sleep(50)
+                $synth.SpeakAsync($text) | Out-Null
+            }
+        }
+        else {
+            $lblStatus.Text = "Status: No messages"
+        }
+    }
+    catch {
+        $lblStatus.Text = "Status: Error reading chat"
+    }
+}
+
+# Inicialización del puntero del archivo y precarga de la última respuesta
+if ($global:transcriptPath -and (Test-Path $global:transcriptPath)) {
+    $fileInfo = New-Object System.IO.FileInfo($global:transcriptPath)
     $global:lastFilePos = $fileInfo.Length
+    Update-LatestSpeech -speakImmediately $false
 }
 
 # Eventos de los botones
 $btnPlayPause.Add_Click({
-        if ($synth.State -eq 'Paused') {
-            $synth.Resume()
+    if ($synth.State -eq 'Paused') {
+        $synth.Resume()
+        $btnPlayPause.Text = "Pause"
+        $lblStatus.Text = "Status: Reading..."
+    }
+    elseif ($synth.State -eq 'Speaking') {
+        $synth.Pause()
+        $btnPlayPause.Text = "Resume"
+        $lblStatus.Text = "Status: Paused"
+    }
+})
+
+$btnStop.Add_Click({
+    $synth.SpeakAsyncCancelAll()
+    $btnPlayPause.Text = "Pause"
+    $lblStatus.Text = "Status: Stopped"
+})
+
+$btnReplay.Add_Click({
+    try {
+        $synth.SpeakAsyncCancelAll()
+        [System.Threading.Thread]::Sleep(50)
+        if ($global:lastText -ne "") {
+            $synth.SpeakAsync($global:lastText) | Out-Null
             $btnPlayPause.Text = "Pause"
             $lblStatus.Text = "Status: Reading..."
         }
-        elseif ($synth.State -eq 'Speaking') {
-            $synth.Pause()
-            $btnPlayPause.Text = "Resume"
-            $lblStatus.Text = "Status: Paused"
-        }
-    })
+    }
+    catch {}
+})
 
-$btnStop.Add_Click({
-        $synth.SpeakAsyncCancelAll()
-        $btnPlayPause.Text = "Pause"
-        $lblStatus.Text = "Status: Stopped"
-    })
+$btnReload.Add_Click({
+    Update-LatestSpeech -speakImmediately $true
+})
 
-$btnReplay.Add_Click({
-        try {
-            $synth.SpeakAsyncCancelAll()
-            [System.Threading.Thread]::Sleep(50)
-            if ($global:lastText -ne "") {
-                $synth.SpeakAsync($global:lastText) | Out-Null
-                $btnPlayPause.Text = "Pause"
-                $lblStatus.Text = "Status: Reading..."
-            }
-        }
-        catch {}
-    })
-
-# Lógica del Timer (lee asíncronamente el archivo sin bloquear botones)
+# Lógica del Timer (monitorea asíncronamente el archivo sin bloquear la UI)
 $timer = New-Object System.Windows.Forms.Timer
 $timer.Interval = 1000
 $timer.Add_Tick({
-        if (Test-Path $transcriptPath) {
-            $fileInfo = New-Object System.IO.FileInfo($transcriptPath)
-            if ($fileInfo.Length -gt $global:lastFilePos) {
-                $stream = $fileInfo.Open([System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
-                $stream.Position = $global:lastFilePos
-                $reader = New-Object System.IO.StreamReader($stream, [System.Text.Encoding]::UTF8)
-                $newContent = $reader.ReadToEnd()
-                $global:lastFilePos = $stream.Position
-                $reader.Close()
-                $stream.Close()
-            
-                $newLines = $newContent -split "`n"
-                foreach ($line in $newLines) {
-                    if ($line -match '"source":"MODEL"' -and $line -match '"type":"PLANNER_RESPONSE"') {
-                        try {
-                            $json = $line | ConvertFrom-Json
-                            if ($json.content) {
-                                # Determinar idioma según selector o detección automática
-                                $targetLang = "es"
-                                switch ($cmbLang.SelectedIndex) {
-                                    1 { $targetLang = "es" }
-                                    2 { $targetLang = "de" }
-                                    3 { $targetLang = "en" }
-                                    default { $targetLang = Detect-Language $json.content }
-                                }
-
-                                # Conmutar voz correspondiente si está disponible
-                                if ($voiceMap[$targetLang]) {
-                                    try { $synth.SelectVoice($voiceMap[$targetLang]) } catch {}
-                                }
-
-                                $flag = switch ($targetLang) {
-                                    "de" { "[DE]" }
-                                    "en" { "[EN]" }
-                                    default { "[ES]" }
-                                }
-
-                                $text = Normalize-Text $json.content $targetLang
-
-                                $global:lastText = $text
-                                $txtSpeech.Text = $text
-                                $lblStatus.Text = "Status: Reading $flag"
-                                $btnPlayPause.Text = "Pause"
-                                $synth.SpeakAsync($text) | Out-Null
-                            }
-                        }
-                        catch {}
-                    }
-                }
+    # Si ConversationId es auto, verificar cada 2 segundos si se abrió una nueva conversación en el IDE
+    if ($ConversationId -eq "auto") {
+        $global:autoCheckCounter++
+        if ($global:autoCheckCounter % 2 -eq 0) {
+            $latest = Get-LatestTranscriptPath
+            if ($latest -and $latest -ne $global:transcriptPath) {
+                $global:transcriptPath = $latest
+                $global:lastFilePos = 0
             }
         }
-    })
+    }
+
+    if ($global:transcriptPath -and (Test-Path $global:transcriptPath)) {
+        $fileInfo = New-Object System.IO.FileInfo($global:transcriptPath)
+        
+        if ($fileInfo.Length -lt $global:lastFilePos) {
+            $global:lastFilePos = 0
+        }
+
+        if ($fileInfo.Length -gt $global:lastFilePos) {
+            $stream = $fileInfo.Open([System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+            $stream.Position = $global:lastFilePos
+            $reader = New-Object System.IO.StreamReader($stream, [System.Text.Encoding]::UTF8)
+            $newContent = $reader.ReadToEnd()
+            $global:lastFilePos = $stream.Position
+            $reader.Close()
+            $stream.Close()
+        
+            $newLines = $newContent -split "`n"
+            $latestModelContent = $null
+
+            foreach ($line in $newLines) {
+                if ($line -match '"source":"MODEL"' -and $line -match '"type":"PLANNER_RESPONSE"') {
+                    try {
+                        $json = $line | ConvertFrom-Json
+                        if ($json.content -and (-not [string]::IsNullOrWhiteSpace($json.content))) {
+                            $latestModelContent = $json.content
+                        }
+                    }
+                    catch {}
+                }
+            }
+
+            if ($latestModelContent) {
+                $targetLang = "es"
+                switch ($cmbLang.SelectedIndex) {
+                    1 { $targetLang = "es" }
+                    2 { $targetLang = "de" }
+                    3 { $targetLang = "en" }
+                    default { $targetLang = Detect-Language $latestModelContent }
+                }
+
+                if ($voiceMap[$targetLang]) {
+                    try { $synth.SelectVoice($voiceMap[$targetLang]) } catch {}
+                }
+
+                $flag = switch ($targetLang) {
+                    "de" { "[DE]" }
+                    "en" { "[EN]" }
+                    default { "[ES]" }
+                }
+
+                $text = Normalize-Text $latestModelContent $targetLang
+
+                $global:lastText = $text
+                $txtSpeech.Text = $text
+                $lblStatus.Text = "Status: Reading $flag"
+                $btnPlayPause.Text = "Pause"
+                
+                $synth.SpeakAsyncCancelAll()
+                $synth.SpeakAsync($text) | Out-Null
+            }
+        }
+    }
+})
 
 $form.Add_FormClosed({
-        $timer.Stop()
-        $synth.Dispose()
-    })
+    $timer.Stop()
+    $synth.Dispose()
+})
 
 $timer.Start()
 
